@@ -3,6 +3,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   coverage:
@@ -10,9 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate synthetic LCOV (0% coverage — DB not available in CI)
+        run: |
+          (find . -name "*.rb" -not -path "./.git/*" | while read f; do
+            echo "SF:$f"
+            echo "end_of_record"
+          done) > synthetic.lcov
+
       - name: Upload coverage to Codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ""
-        continue-on-error: true
+          coverage-reports: synthetic.lcov
